@@ -26,7 +26,7 @@ class _HomepageState extends State<Homepage> {
       "phone" : "+1 123-456-7890",
       "email" : "william.paterson@my-own-personal-domain.com",
       "url" : "https://facebook.com/john_doe",
-      "photo" : "https://www.facebook.com/photo/?fbid=977259547716988&set=a.102281275214824",
+      "photo" : "https://scontent.fcrk1-4.fna.fbcdn.net/v/t39.30808-6/470820644_921287969980813_6651135653347092985_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=a5f93a&_nc_eui2=AeHmDNNRcYUMcQE2wBKXvV9g8y0D0Oi_9DbzLQPQ6L_0NtMTHR1wsDUcJPYZJ7DPfUf5hGyHmadFVnt_FXki-ki2&_nc_ohc=F2B8BM7Lc_QQ7kNvwGkYrYV&_nc_oc=AdlS_as0CEt-IlefJeu1Srezr2xRWLhAJVsSbzHWAEMuk2si42MhOPRVsoiUYUEdOrg&_nc_zt=23&_nc_ht=scontent.fcrk1-4.fna&_nc_gid=knZ-Cnt4b6B7T66g2Rvydg&oh=00_AfHmVHNfuIrm1jem8QwNBzzN0aRzsJHCJX6jspotl-MxGw&oe=67FFEC59",
     },
 
     {
@@ -34,7 +34,7 @@ class _HomepageState extends State<Homepage> {
       "phone" : "+1 123-456-7890",
       "email" : "william.paterson@my-own-personal-domain.com",
       "url" : "https://facebook.com/john_doe",
-      "photo" : "https://www.facebook.com/photo/?fbid=977259547716988&set=a.102281275214824",
+      "photo" : "https://lh3.googleusercontent.com/UxsYFA_2a5WFpoL3TvTr9f7CsnTUFiRRHVCRUdZXCfoOeKQzs51V96eQVWRs1qi1TS_DpkC1PJ-BuUdkuOXrQg59SGjyPH0O-rGrYKlvCNGs2mN9=w960-rj-nu-e365",
     },
 
     {
@@ -42,7 +42,7 @@ class _HomepageState extends State<Homepage> {
       "phone" : "+1 123-456-7890",
       "email" : "william.paterson@my-own-personal-domain.com",
       "url" : "https://facebook.com/john_doe",
-      "photo" : "https://www.facebook.com/photo/?fbid=977259547716988&set=a.102281275214824",
+      "photo" : "https://plus.unsplash.com/premium_photo-1689530775582-83b8abdb5020?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     },
 
     {
@@ -50,7 +50,7 @@ class _HomepageState extends State<Homepage> {
       "phone" : "+1 123-456-7890",
       "email" : "william.paterson@my-own-personal-domain.com",
       "url" : "https://facebook.com/john_doe",
-      "photo" : "https://www.facebook.com/photo/?fbid=977259547716988&set=a.102281275214824",
+      "photo" : "https://plus.unsplash.com/premium_photo-1689530775582-83b8abdb5020?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     }
   ];
   @override
