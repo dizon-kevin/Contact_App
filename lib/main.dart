@@ -58,7 +58,11 @@ class _HomepageState extends State<Homepage> {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         trailing: CupertinoButton(child: Icon(CupertinoIcons.add), onPressed: (){
+          showCupertinoModalPopup(context: context, builder: (context){
+            return CupertinoActionSheet(
 
+            );
+          });
         }),
       ),
         child: SafeArea(child: Padding(
