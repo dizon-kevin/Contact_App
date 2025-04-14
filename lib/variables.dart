@@ -1,5 +1,719 @@
-String name = "";
-String phone = "";
-String url = "";
-String email = "";
-String photo = "";
+contact.dart
+
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:image_picker/image_picker.dart';
+import 'variables.dart';
+import 'dart:convert';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_flutter/adapters.dart';
+
+class Contact extends StatefulWidget {
+  const Contact({super.key});
+
+  @override
+  State<Contact> createState() => _ContactState();
+}
+
+class _ContactState extends State<Contact> {
+  bool _isEditing = false;
+  late Box<dynamic> _myBox; // Add reference to Hive box
+  int? _contactIndex; // To track which contact is being edited
+  final ImagePicker _picker = ImagePicker();
+  String? _selectedImageBase64;
+
+  // Controllers for text fields
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _urlController;
+  List<Map<String, dynamic>> _phoneNumbersEditing = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _myBox = Hive.box('database'); // Get the opened box
+    _nameController = TextEditingController(text: name);
+    _emailController = TextEditingController(text: email);
+    _urlController = TextEditingController(text: url);
+
+    // Store the current photo in the selected image base64 if it's already in base64 format
+    if (isBase64) {
+      _selectedImageBase64 = photo;
+    }
+
+    // Find contact index in the database
+    _findContactIndex();
+
+    // Initialize phone number controllers
+    if (phoneNumbers.isNotEmpty) {
+      _phoneNumbersEditing = List<Map<String, dynamic>>.from(phoneNumbers);
+    } else if (phone.isNotEmpty) {
+      _phoneNumbersEditing = [{'label': 'mobile', 'number': phone}];
+    }
+  }
+
+  // Find the index of the current contact in the Hive database
+  void _findContactIndex() {
+    List<dynamic> contacts = _myBox.get('contacts') ?? [];
+    for (int i = 0; i < contacts.length; i++) {
+      if (contacts[i]['name'] == name && contacts[i]['email'] == email) {
+        _contactIndex = i;
+        break;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _urlController.dispose();
+    super.dispose();
+  }
+
+  void _toggleEditMode() {
+    setState(() {
+      _isEditing = !_isEditing;
+      if (!_isEditing) {
+        // Save changes
+        _saveChanges();
+      }
+    });
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 75, // Reduce quality to save storage space
+      );
+
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          // Convert image to base64 string for storage
+          _selectedImageBase64 = base64Encode(bytes);
+          isBase64 = true; // Update the global flag
+        });
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+    }
+  }
+
+  // Method to get image widget from base64 string or URL
+  Widget _getImageWidget() {
+    if (_selectedImageBase64 != null && _selectedImageBase64!.isNotEmpty) {
+      try {
+        return Image.memory(
+          base64Decode(_selectedImageBase64!),
+          width: double.infinity,
+          fit: BoxFit.cover,
+          height: 300,
+        );
+      } catch (e) {
+        print('Error decoding image: $e');
+      }
+    } else if (isBase64) {
+      return Image.memory(
+        base64Decode(photo),
+        width: double.infinity,
+        fit: BoxFit.cover,
+        height: 300,
+      );
+    }
+
+    // Return network image if not base64
+    return Image.network(
+      photo,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      height: 300,
+    );
+  }
+
+  void _saveChanges() {
+    // Update the global variables with new values
+    name = _nameController.text;
+    email = _emailController.text;
+    url = _urlController.text;
+
+    // Update photo if a new one was selected
+    if (_selectedImageBase64 != null) {
+      photo = _selectedImageBase64!;
+      isBase64 = true;
+    }
+
+    // Update phone numbers
+    if (_phoneNumbersEditing.isNotEmpty) {
+      phoneNumbers = List<Map<String, dynamic>>.from(_phoneNumbersEditing);
+      phone = _phoneNumbersEditing[0]['number'] ?? '';
+    }
+
+    // Update in Hive database if we found this contact
+    if (_contactIndex != null) {
+      List<dynamic> contacts = _myBox.get('contacts') ?? [];
+
+      // Update the contact at the found index
+      contacts[_contactIndex!] = {
+        "name": name,
+        "company": contacts[_contactIndex!]['company'] ?? '', // Preserve existing company if any
+        "phone": phone,
+        "phoneNumbers": phoneNumbers,
+        "email": email,
+        "url": url,
+        "photo": photo,
+        "isBase64": isBase64,
+      };
+
+      // Save back to Hive
+      _myBox.put('contacts', contacts);
+      print('Contact updated in Hive database at index $_contactIndex');
+    } else {
+      print('Contact not found in database, could not update.');
+    }
+  }
+
+  void _addPhoneNumber() {
+    setState(() {
+      _phoneNumbersEditing.add({'label': 'mobile', 'number': ''});
+    });
+  }
+
+  void _removePhoneNumber(int index) {
+    setState(() {
+      _phoneNumbersEditing.removeAt(index);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoPageScaffold(
+        child: SafeArea(child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                alignment: Alignment.bottomCenter,
+                children: [
+                  // Display image with the ability to update
+                  _getImageWidget(),
+                  Positioned(
+                      top: -2,
+                      left: -15,
+                      child: Row(
+                        children: [
+                          CupertinoButton(
+                              child: Icon(CupertinoIcons.chevron_back, color: CupertinoColors.white),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              }
+                          )
+                        ],
+                      )
+                  ),
+                  Positioned(
+                      top: 10,
+                      right: 10,
+                      child: CupertinoButton(
+                        padding: EdgeInsets.all(10),
+                        child: Icon(
+                          _isEditing ? CupertinoIcons.check_mark : CupertinoIcons.pencil,
+                          color: CupertinoColors.white,
+                        ),
+                        onPressed: _toggleEditMode,
+                      )
+                  ),
+                  // Add Change Photo button if in editing mode
+                  if (_isEditing)
+                    Positioned(
+                        top: 60,
+                        right: 10,
+                        child: CupertinoButton(
+                          padding: EdgeInsets.all(10),
+                          color: CupertinoColors.systemGrey.withOpacity(0.5),
+                          child: Row(
+                            children: [
+                              Icon(CupertinoIcons.camera, color: CupertinoColors.white, size: 16),
+                              SizedBox(width: 5),
+                              Text("Change Photo", style: TextStyle(fontSize: 14)),
+                            ],
+                          ),
+                          onPressed: _pickImage,
+                        )
+                    ),
+                  Positioned(
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (!_isEditing) ...[
+                              Text("last used: ", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w200)),
+                              Container(
+                                  padding: EdgeInsets.fromLTRB(5,0,5,0),
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(5),
+                                      color: CupertinoColors.white
+                                  ),
+                                  child: Text("P", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: CupertinoColors.black))),
+                              Text("Primary", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w200)),
+                              Icon(CupertinoIcons.chevron_forward, size: 12, color: CupertinoColors.white)
+                            ],
+                          ],
+                        ),
+                        _isEditing
+                            ? CupertinoTextField(
+                          controller: _nameController,
+                          style: TextStyle(fontSize: 24, color: CupertinoColors.white),
+                          decoration: BoxDecoration(
+                            color: CupertinoColors.systemGrey.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        )
+                            : Text(name, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500)),
+                        if (!_isEditing)
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  child: Container(
+                                    margin: EdgeInsets.fromLTRB(5,0,5,0),
+                                    padding: EdgeInsets.fromLTRB(10,0,10,5),
+                                    decoration: BoxDecoration(
+                                        color: CupertinoColors.systemGrey.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(10)
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        CupertinoButton(child: Icon(CupertinoIcons.bubble_middle_bottom_fill, color: CupertinoColors.white), onPressed: () async{
+                                          // Use primary phone number
+                                          final String primaryPhone = phoneNumbers.isNotEmpty ? phoneNumbers[0]['number'] ?? '' : phone;
+                                          final Uri uri = await Uri.parse('sms:$primaryPhone');
+                                          await launchUrl(uri);
+                                        }),
+                                        Text('Message', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w300))
+
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  child: Container(
+                                    margin: EdgeInsets.fromLTRB(5,0,5,0),
+                                    padding: EdgeInsets.fromLTRB(10,0,10,5),
+                                    decoration: BoxDecoration(
+                                        color: CupertinoColors.systemGrey.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(10)
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        CupertinoButton(child: Icon(CupertinoIcons.phone_solid, color: CupertinoColors.white), onPressed: () async{
+                                          // Use primary phone number
+                                          final String primaryPhone = phoneNumbers.isNotEmpty ? phoneNumbers[0]['number'] ?? '' : phone;
+                                          final Uri uri = await Uri.parse('tel:$primaryPhone');
+                                          await launchUrl(uri);
+                                        }),
+                                        Text('Call', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w300))
+
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  child: Container(
+                                    margin: EdgeInsets.fromLTRB(5,0,5,0),
+                                    padding: EdgeInsets.fromLTRB(10,0,10,5),
+                                    decoration: BoxDecoration(
+                                        color: CupertinoColors.systemGrey.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(10)
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        CupertinoButton(child: Icon(CupertinoIcons.video_camera_solid, color: CupertinoColors.white), onPressed: (){}),
+                                        Text('Video', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w300))
+
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  child: Container(
+                                    margin: EdgeInsets.fromLTRB(5,0,5,0),
+                                    padding: EdgeInsets.fromLTRB(10,0,10,5),
+                                    decoration: BoxDecoration(
+                                        color: CupertinoColors.systemGrey.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(10)
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        CupertinoButton(child: Icon(CupertinoIcons.mail_solid, color: CupertinoColors.white), onPressed: () async{
+                                          final Uri uri = await Uri.parse('mailto:$email');
+                                          await launchUrl(uri);
+                                        }),
+                                        Text('Mail', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w300))
+
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                      ],
+                    ),
+                  )
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Phone Numbers Section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Phone Numbers',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: CupertinoColors.systemGrey,
+                          ),
+                        ),
+                        if (_isEditing)
+                          CupertinoButton(
+                            padding: EdgeInsets.zero,
+                            child: Icon(CupertinoIcons.add_circled, color: CupertinoColors.activeBlue),
+                            onPressed: _addPhoneNumber,
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: 10),
+
+                    // Display all phone numbers with labels
+                    if (_isEditing)
+                      ...List.generate(_phoneNumbersEditing.length, (index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: EdgeInsets.fromLTRB(15, 8, 15, 8),
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(5),
+                                      color: CupertinoColors.systemGrey.withOpacity(0.3)
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Label dropdown
+                                      CupertinoButton(
+                                        padding: EdgeInsets.zero,
+                                        child: Text(
+                                          _phoneNumbersEditing[index]['label'] ?? 'mobile',
+                                          style: TextStyle(fontSize: 13),
+                                        ),
+                                        onPressed: () {
+                                          showCupertinoModalPopup(
+                                            context: context,
+                                            builder: (BuildContext context) => CupertinoActionSheet(
+                                              title: Text('Select Label'),
+                                              actions: <CupertinoActionSheetAction>[
+                                                CupertinoActionSheetAction(
+                                                  child: Text('mobile'),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      _phoneNumbersEditing[index]['label'] = 'mobile';
+                                                    });
+                                                    Navigator.pop(context);
+                                                  },
+                                                ),
+                                                CupertinoActionSheetAction(
+                                                  child: Text('home'),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      _phoneNumbersEditing[index]['label'] = 'home';
+                                                    });
+                                                    Navigator.pop(context);
+                                                  },
+                                                ),
+                                                CupertinoActionSheetAction(
+                                                  child: Text('work'),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      _phoneNumbersEditing[index]['label'] = 'work';
+                                                    });
+                                                    Navigator.pop(context);
+                                                  },
+                                                ),
+                                                CupertinoActionSheetAction(
+                                                  child: Text('other'),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      _phoneNumbersEditing[index]['label'] = 'other';
+                                                    });
+                                                    Navigator.pop(context);
+                                                  },
+                                                ),
+                                              ],
+                                              cancelButton: CupertinoActionSheetAction(
+                                                child: Text('Cancel'),
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                },
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      // Phone number text field
+                                      CupertinoTextField(
+                                        placeholder: 'Phone number',
+                                        keyboardType: TextInputType.phone,
+                                        decoration: null,
+                                        padding: EdgeInsets.zero,
+                                        controller: TextEditingController(text: _phoneNumbersEditing[index]['number'] ?? ''),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _phoneNumbersEditing[index]['number'] = value;
+                                          });
+                                        },
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              CupertinoButton(
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                child: Icon(CupertinoIcons.delete, color: CupertinoColors.destructiveRed),
+                                onPressed: () => _removePhoneNumber(index),
+                              ),
+                            ],
+                          ),
+                        );
+                      })
+                    else if (phoneNumbers.isNotEmpty)
+                      ...phoneNumbers.map((phoneData) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: GestureDetector(
+                            onTap: () async {
+                              final Uri uri = await Uri.parse('tel:${phoneData['number']}');
+                              await launchUrl(uri);
+                            },
+                            child: Container(
+                              padding: EdgeInsets.fromLTRB(15, 8, 15, 8),
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(5),
+                                  color: CupertinoColors.systemGrey.withOpacity(0.3)
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    phoneData['label'] ?? 'phone',
+                                    style: TextStyle(fontSize: 13),
+                                  ),
+                                  Text(
+                                    phoneData['number'] ?? '',
+                                    style: TextStyle(color: CupertinoColors.systemBlue, fontSize: 14),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList()
+                    else if (phone.isNotEmpty)
+                      // Fallback to single phone if no phoneNumbers list
+                        GestureDetector(
+                          onTap: () async {
+                            final Uri uri = await Uri.parse('tel:$phone');
+                            await launchUrl(uri);
+                          },
+                          child: Container(
+                            padding: EdgeInsets.fromLTRB(15, 8, 15, 8),
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5),
+                                color: CupertinoColors.systemGrey.withOpacity(0.3)
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('mobile', style: TextStyle(fontSize: 13)),
+                                Text(
+                                  phone,
+                                  style: TextStyle(color: CupertinoColors.systemBlue, fontSize: 14),
+                                )
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          padding: EdgeInsets.fromLTRB(15, 8, 15, 8),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5),
+                              color: CupertinoColors.systemGrey.withOpacity(0.3)
+                          ),
+                          child: Text('No phone numbers available'),
+                        ),
+
+                    SizedBox(height: 20),
+
+                    // Email Section
+                    Text(
+                      'Email',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: CupertinoColors.systemGrey,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    _isEditing
+                        ? Container(
+                      padding: EdgeInsets.fromLTRB(15, 8, 15, 8),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: CupertinoColors.systemGrey.withOpacity(0.3)
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('email', style: TextStyle(fontSize: 13)),
+                          CupertinoTextField(
+                            controller: _emailController,
+                            placeholder: 'Email address',
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: null,
+                            padding: EdgeInsets.zero,
+                          )
+                        ],
+                      ),
+                    )
+                        : email.isNotEmpty
+                        ? GestureDetector(
+                      onTap: () async {
+                        final Uri uri = await Uri.parse('mailto:$email');
+                        await launchUrl(uri);
+                      },
+                      child: Container(
+                        padding: EdgeInsets.fromLTRB(15, 8, 15, 8),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            color: CupertinoColors.systemGrey.withOpacity(0.3)
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('email', style: TextStyle(fontSize: 13)),
+                            Text(
+                              email,
+                              style: TextStyle(color: CupertinoColors.systemBlue, fontSize: 14),
+                            )
+                          ],
+                        ),
+                      ),
+                    )
+                        : Container(
+                      padding: EdgeInsets.fromLTRB(15, 8, 15, 8),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: CupertinoColors.systemGrey.withOpacity(0.3)
+                      ),
+                      child: Text('No email available'),
+                    ),
+
+                    SizedBox(height: 20),
+
+                    // Website Section
+                    Text(
+                      'Website',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: CupertinoColors.systemGrey,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    _isEditing
+                        ? Container(
+                      padding: EdgeInsets.fromLTRB(15, 8, 15, 8),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: CupertinoColors.systemGrey.withOpacity(0.3)
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('url', style: TextStyle(fontSize: 13)),
+                          CupertinoTextField(
+                            controller: _urlController,
+                            placeholder: 'Website URL',
+                            keyboardType: TextInputType.url,
+                            decoration: null,
+                            padding: EdgeInsets.zero,
+                          )
+                        ],
+                      ),
+                    )
+                        : url.isNotEmpty
+                        ? GestureDetector(
+                      onTap: () async {
+                        final Uri uri = await Uri.parse(url);
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      },
+                      child: Container(
+                        padding: EdgeInsets.fromLTRB(15, 8, 15, 8),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            color: CupertinoColors.systemGrey.withOpacity(0.3)
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('url', style: TextStyle(fontSize: 13)),
+                            Text(
+                              url,
+                              style: TextStyle(color: CupertinoColors.systemBlue, fontSize: 14),
+                            )
+                          ],
+                        ),
+                      ),
+                    )
+                        : Container(
+                      padding: EdgeInsets.fromLTRB(15, 8, 15, 8),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: CupertinoColors.systemGrey.withOpacity(0.3)
+                      ),
+                      child: Text('No website available'),
+                    ),
+
+                    // Add some padding at the bottom for scrolling
+                    SizedBox(height: 40),
+                  ],
+                ),
+              )
+            ],
+          ),
+        )));
+  }
+}

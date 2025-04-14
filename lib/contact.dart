@@ -1,8 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:image_picker/image_picker.dart';
 import 'variables.dart';
-
+import 'dart:convert';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_flutter/adapters.dart';
 
 class Contact extends StatefulWidget {
   const Contact({super.key});
@@ -10,6 +13,177 @@ class Contact extends StatefulWidget {
   @override
   State<Contact> createState() => _ContactState();
 }
+
+class _ContactState extends State<Contact> {
+  bool _isEditing = false;
+  late Box<dynamic> _myBox; // Add reference to Hive box
+  int? _contactIndex; // To track which contact is being edited
+  final ImagePicker _picker = ImagePicker();
+  String? _selectedImageBase64;
+
+  // Controllers for text fields
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _urlController;
+  List<Map<String, dynamic>> _phoneNumbersEditing = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _myBox = Hive.box('database'); // Get the opened box
+    _nameController = TextEditingController(text: name);
+    _emailController = TextEditingController(text: email);
+    _urlController = TextEditingController(text: url);
+
+    // Store the current photo in the selected image base64 if it's already in base64 format
+    if (isBase64) {
+      _selectedImageBase64 = photo;
+    }
+
+    // Find contact index in the database
+    _findContactIndex();
+
+    // Initialize phone number controllers
+    if (phoneNumbers.isNotEmpty) {
+      _phoneNumbersEditing = List<Map<String, dynamic>>.from(phoneNumbers);
+    } else if (phone.isNotEmpty) {
+      _phoneNumbersEditing = [{'label': 'mobile', 'number': phone}];
+    }
+  }
+
+  // Find the index of the current contact in the Hive database
+  void _findContactIndex() {
+    List<dynamic> contacts = _myBox.get('contacts') ?? [];
+    for (int i = 0; i < contacts.length; i++) {
+      if (contacts[i]['name'] == name && contacts[i]['email'] == email) {
+        _contactIndex = i;
+        break;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _urlController.dispose();
+    super.dispose();
+  }
+
+  void _toggleEditMode() {
+    setState(() {
+      _isEditing = !_isEditing;
+      if (!_isEditing) {
+        // Save changes
+        _saveChanges();
+      }
+    });
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 75, // Reduce quality to save storage space
+      );
+
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          // Convert image to base64 string for storage
+          _selectedImageBase64 = base64Encode(bytes);
+          isBase64 = true; // Update the global flag
+        });
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+    }
+  }
+
+  // Method to get image widget from base64 string or URL
+  Widget _getImageWidget() {
+    if (_selectedImageBase64 != null && _selectedImageBase64!.isNotEmpty) {
+      try {
+        return Image.memory(
+          base64Decode(_selectedImageBase64!),
+          width: double.infinity,
+          fit: BoxFit.cover,
+          height: 300,
+        );
+      } catch (e) {
+        print('Error decoding image: $e');
+      }
+    } else if (isBase64) {
+      return Image.memory(
+        base64Decode(photo),
+        width: double.infinity,
+        fit: BoxFit.cover,
+        height: 300,
+      );
+    }
+
+    // Return network image if not base64
+    return Image.network(
+      photo,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      height: 300,
+    );
+  }
+
+  void _saveChanges() {
+    // Update the global variables with new values
+    name = _nameController.text;
+    email = _emailController.text;
+    url = _urlController.text;
+
+    // Update photo if a new one was selected
+    if (_selectedImageBase64 != null) {
+      photo = _selectedImageBase64!;
+      isBase64 = true;
+    }
+
+    // Update phone numbers
+    if (_phoneNumbersEditing.isNotEmpty) {
+      phoneNumbers = List<Map<String, dynamic>>.from(_phoneNumbersEditing);
+      phone = _phoneNumbersEditing[0]['number'] ?? '';
+    }
+
+    // Update in Hive database if we found this contact
+    if (_contactIndex != null) {
+      List<dynamic> contacts = _myBox.get('contacts') ?? [];
+
+      // Update the contact at the found index
+      contacts[_contactIndex!] = {
+        "name": name,
+        "company": contacts[_contactIndex!]['company'] ?? '', // Preserve existing company if any
+        "phone": phone,
+        "phoneNumbers": phoneNumbers,
+        "email": email,
+        "url": url,
+        "photo": photo,
+        "isBase64": isBase64,
+      };
+
+      // Save back to Hive
+      _myBox.put('contacts', contacts);
+      print('Contact updated in Hive database at index $_contactIndex');
+    } else {
+      print('Contact not found in database, could not update.');
+    }
+  }
+
+  void _addPhoneNumber() {
+    setState(() {
+      _phoneNumbersEditing.add({'label': 'mobile', 'number': ''});
+    });
+  }
+
+  void _removePhoneNumber(int index) {
+    setState(() {
+      _phoneNumbersEditing.removeAt(index);
+    });
+  }
 
 class _ContactState extends State<Contact> {
   @override
