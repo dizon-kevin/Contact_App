@@ -613,6 +613,135 @@ setState(() {
                                           );
                                         },
 
+     child: Container(
+                                          width: 80,
+                                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                                          child: Text(
+                                            field.label,
+                                            style: TextStyle(
+                                              color: CupertinoColors.activeBlue,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+
+                                      // Email input field
+                                      Expanded(
+                                        child: CupertinoTextField(
+                                          controller: field.controller,
+                                          placeholder: 'Email',
+                                          keyboardType: TextInputType.emailAddress,
+                                          decoration: BoxDecoration(
+                                            color: Colors.transparent,
+                                          ),
+                                          padding: EdgeInsets.symmetric(vertical: 12),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  // Add divider except for the last item
+                                  if (index < _emailFields.length - 1)
+                                    Divider(
+                                      color: CupertinoColors.systemGrey.withOpacity(0.3),
+                                      height: 1,
+                                      indent: 46, // Indent to align with the text fields
+                                    ),
+                                ],
+                              );
+                            }).toList(),
+
+
+                            GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  _emailFields.add(EmailField());
+                                });
+                              },
+                              child: Row(
+                                children: [
+                                  Container(
+                                    margin: EdgeInsets.only(left: 12),
+                                    width: 26,
+                                    height: 26,
+                                    decoration: BoxDecoration(
+                                      color: CupertinoColors.activeGreen,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      CupertinoIcons.plus,
+                                      color: CupertinoColors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    child: Text(
+                                      'add email',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // URL Field
+                      Container(
+                        decoration: BoxDecoration(
+                          color: CupertinoColors.systemGrey.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        margin: EdgeInsets.only(bottom: 10),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 80,
+                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                                  child: Text(
+                                    'URL',
+                                    style: TextStyle(
+                                      color: CupertinoColors.activeBlue,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: CupertinoTextField(
+                                    controller: _url,
+                                    placeholder: 'Website',
+                                    keyboardType: TextInputType.url,
+                                    decoration: BoxDecoration(
+                                      color: Colors.transparent,
+                                    ),
+                                    padding: EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Spacer
+                      SizedBox(height: 100),
+                    ],
+                  ),
+                );
+              }
+          ),
+        );
+      },
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
