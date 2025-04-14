@@ -359,6 +359,96 @@ setState(() {
                         ),
                       ),
 
+   SizedBox(height: 20),
+
+                      // Phone Fields
+                      Container(
+                        decoration: BoxDecoration(
+                          color: CupertinoColors.systemGrey.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        margin: EdgeInsets.only(bottom: 10),
+                        child: Column(
+                          children: [
+                            // Existing phone fields
+                            ..._phoneFields.asMap().entries.map((entry) {
+                              int index = entry.key;
+                              PhoneField field = entry.value;
+
+                              return Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      // Delete button (red circle with minus)
+                                      GestureDetector(
+                                        onTap: () {
+                                          if (_phoneFields.length > 1) {
+                                            setModalState(() {
+                                              _phoneFields.removeAt(index);
+                                            });
+                                          }
+                                        },
+                                        child: Container(
+                                          margin: EdgeInsets.only(left: 12),
+                                          width: 26,
+                                          height: 26,
+                                          decoration: BoxDecoration(
+                                            color: CupertinoColors.destructiveRed,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            CupertinoIcons.minus,
+                                            color: CupertinoColors.white,
+                                            size: 18,
+                                          ),
+                                        ),
+                                      ),
+
+                                      // Label selection
+                                      GestureDetector(
+                                        onTap: () {
+                                          // Show a modal for label selection
+                                          showCupertinoModalPopup(
+                                            context: context,
+                                            builder: (context) => Container(
+                                              height: 250,
+                                              color: CupertinoColors.black,
+                                              child: Column(
+                                                children: [
+                                                  Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    children: [
+                                                      CupertinoButton(
+                                                        child: Text('Cancel'),
+                                                        onPressed: () => Navigator.pop(context),
+                                                      ),
+                                                      CupertinoButton(
+                                                        child: Text('Done'),
+                                                        onPressed: () => Navigator.pop(context),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Expanded(
+                                                    child: CupertinoPicker(
+                                                      itemExtent: 32,
+                                                      onSelectedItemChanged: (int value) {
+                                                        setModalState(() {
+                                                          field.label = _phoneLabels[value];
+                                                        });
+                                                      },
+                                                      children: _phoneLabels.map((label) =>
+                                                          Text(label)
+                                                      ).toList(),
+                                                      scrollController: FixedExtentScrollController(
+                                                        initialItem: _phoneLabels.indexOf(field.label),
+                                                      ),
+                                                    ),
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
