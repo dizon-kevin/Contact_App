@@ -272,6 +272,92 @@ class _HomepageState extends State<Homepage> {
                     // Add a flag to indicate if it's a base64 image or URL
                     "isBase64": _selectedImageBase64 != null,
                   };
+setState(() {
+                    if (contactToEdit != null && editIndex != null) {
+                      // Update existing contact
+                      contacts[editIndex] = contactData;
+                      // Also update in filtered list if present
+                      int filteredIndex = filteredContacts.indexOf(contactToEdit);
+                      if (filteredIndex != -1) {
+                        filteredContacts[filteredIndex] = contactData;
+                      }
+                    } else {
+                      // Add new contact
+                      contacts.add(contactData);
+                      filteredContacts = List.from(contacts); // Refresh filtered list
+                    }
+                    _myBox.put('contacts', contacts);
+                    print(_myBox.get('contacts'));
+                  });
+
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+          message: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setModalState) {
+                return SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Show either selected image or default icon
+                      _selectedImageBase64 != null
+                          ? _getImageWidget(_selectedImageBase64)
+                          : Icon(
+                        CupertinoIcons.person_circle_fill,
+                        color: CupertinoColors.systemGrey,
+                        size: 200,
+                      ),
+                      CupertinoButton(
+                        child: Text('Add Photo', style: TextStyle(color: CupertinoColors.activeBlue)),
+                        onPressed: () async {
+                          await _pickImage();
+                          // Update the modal UI
+                          setModalState(() {});
+                        },
+                      ),
+
+                      // First name, Last name, Company
+                      Container(
+                        decoration: BoxDecoration(
+                          color: CupertinoColors.systemGrey.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        margin: EdgeInsets.symmetric(vertical: 10),
+                        child: Column(
+                          children: [
+                            CupertinoTextField(
+                              controller: _fname,
+                              placeholder: 'First name',
+                              decoration: BoxDecoration(
+                                  color: CupertinoColors.systemBackground.withOpacity(0)),
+                              padding: EdgeInsets.all(12),
+                            ),
+                            Divider(
+                              color: CupertinoColors.systemGrey.withOpacity(0.3),
+                              height: 1,
+                            ),
+                            CupertinoTextField(
+                              controller: _lname,
+                              placeholder: 'Last name',
+                              decoration: BoxDecoration(
+                                  color: CupertinoColors.systemBackground.withOpacity(0)),
+                              padding: EdgeInsets.all(12),
+                            ),
+                            Divider(
+                              color: CupertinoColors.systemGrey.withOpacity(0.3),
+                              height: 1,
+                            ),
+                            CupertinoTextField(
+                              controller: _company,
+                              placeholder: 'Company',
+                              decoration: BoxDecoration(
+                                  color: CupertinoColors.systemBackground.withOpacity(0)),
+                              padding: EdgeInsets.all(12),
+                            ),
+                          ],
+                        ),
+                      ),
 
   @override
   Widget build(BuildContext context) {
