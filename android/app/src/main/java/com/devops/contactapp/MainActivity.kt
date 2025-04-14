@@ -1,4 +1,4 @@
-package com.devops.contact_app;
+package com.devops.contactapp;
 
 import io.flutter.embedding.android.FlutterActivity
 
