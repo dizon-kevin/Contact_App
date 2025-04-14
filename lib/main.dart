@@ -526,6 +526,48 @@ setState(() {
                           ],
                         ),
                       ),
+ Container(
+                        decoration: BoxDecoration(
+                          color: CupertinoColors.systemGrey.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        margin: EdgeInsets.only(bottom: 10),
+                        child: Column(
+                          children: [
+                            // Existing email fields
+                            ..._emailFields.asMap().entries.map((entry) {
+                              int index = entry.key;
+                              EmailField field = entry.value;
+
+                              return Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      // Delete button (red circle with minus)
+                                      GestureDetector(
+                                        onTap: () {
+                                          if (_emailFields.length > 1) {
+                                            setModalState(() {
+                                              _emailFields.removeAt(index);
+                                            });
+                                          }
+                                        },
+                                        child: Container(
+                                          margin: EdgeInsets.only(left: 12),
+                                          width: 26,
+                                          height: 26,
+                                          decoration: BoxDecoration(
+                                            color: CupertinoColors.destructiveRed,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            CupertinoIcons.minus,
+                                            color: CupertinoColors.white,
+                                            size: 18,
+                                          ),
+                                        ),
+                                      ),
+
 
   @override
   Widget build(BuildContext context) {
