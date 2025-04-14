@@ -241,45 +241,87 @@ class _ContactState extends State<Contact> {
                           onPressed: _pickImage,
                         )
                     ),
-                        Container(
-                          child: Container(
-                            margin: EdgeInsets.fromLTRB(5,0,5,0),
-                            padding: EdgeInsets.fromLTRB(10,0,10,5),
-                            decoration: BoxDecoration(
-                                color: CupertinoColors.systemGrey.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(10)
-                            ),
-                            child: Column(
-                              children: [
-                                CupertinoButton(child: Icon(CupertinoIcons.phone_solid, color: CupertinoColors.white,), onPressed: () async{
-                                  final Uri uri = await Uri.parse('tel: $phone');
-                                  await launchUrl(uri);
-                                }),
-                                Text('Call', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w300),)
-              
-                              ],
-                            ),
-                          ),
+                        Positioned(
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (!_isEditing) ...[
+                              Text("last used: ", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w200)),
+                              Container(
+                                  padding: EdgeInsets.fromLTRB(5,0,5,0),
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(5),
+                                      color: CupertinoColors.white
+                                  ),
+                                  child: Text("P", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: CupertinoColors.black))),
+                              Text("Primary", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w200)),
+                              Icon(CupertinoIcons.chevron_forward, size: 12, color: CupertinoColors.white)
+                            ],
+                          ],
                         ),
-                        Container(
-                          child: Container(
-                            margin: EdgeInsets.fromLTRB(5,0,5,0),
-                            padding: EdgeInsets.fromLTRB(10,0,10,5),
-                            decoration: BoxDecoration(
-                                color: CupertinoColors.systemGrey.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(10)
-                            ),
-                            child: Column(
+                        _isEditing
+                            ? CupertinoTextField(
+                          controller: _nameController,
+                          style: TextStyle(fontSize: 24, color: CupertinoColors.white),
+                          decoration: BoxDecoration(
+                            color: CupertinoColors.systemGrey.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        )
+                            : Text(name, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500)),
+                        if (!_isEditing)
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                CupertinoButton(child: Icon(CupertinoIcons.video_camera_solid, color: CupertinoColors.white,), onPressed: (){
+                                Container(
+                                  child: Container(
+                                    margin: EdgeInsets.fromLTRB(5,0,5,0),
+                                    padding: EdgeInsets.fromLTRB(10,0,10,5),
+                                    decoration: BoxDecoration(
+                                        color: CupertinoColors.systemGrey.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(10)
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        CupertinoButton(child: Icon(CupertinoIcons.bubble_middle_bottom_fill, color: CupertinoColors.white), onPressed: () async{
+                                          // Use primary phone number
+                                          final String primaryPhone = phoneNumbers.isNotEmpty ? phoneNumbers[0]['number'] ?? '' : phone;
+                                          final Uri uri = await Uri.parse('sms:$primaryPhone');
+                                          await launchUrl(uri);
+                                        }),
+                                        Text('Message', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w300))
 
-                                }),
-                                Text('Video', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w300),)
-              
-                              ],
-                            ),
-                          ),
-                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  child: Container(
+                                    margin: EdgeInsets.fromLTRB(5,0,5,0),
+                                    padding: EdgeInsets.fromLTRB(10,0,10,5),
+                                    decoration: BoxDecoration(
+                                        color: CupertinoColors.systemGrey.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(10)
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        CupertinoButton(child: Icon(CupertinoIcons.phone_solid, color: CupertinoColors.white), onPressed: () async{
+                                          // Use primary phone number
+                                          final String primaryPhone = phoneNumbers.isNotEmpty ? phoneNumbers[0]['number'] ?? '' : phone;
+                                          final Uri uri = await Uri.parse('tel:$primaryPhone');
+                                          await launchUrl(uri);
+                                        }),
+                                        Text('Call', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w300))
+
+                                      ],
+                                    ),
+                                  ),
+                                ),
                         Container(
                           child: Container(
                             margin: EdgeInsets.fromLTRB(5,0,5,0),
