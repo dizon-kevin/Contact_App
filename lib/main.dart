@@ -5,9 +5,8 @@ import 'contact.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import 'dart:convert';
-import 'dart:typed_data';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -96,6 +95,7 @@ class _HomepageState extends State<Homepage> {
     }
   }
 
+  // marc
   void _deleteContact(int index) {
     int actualIndex = contacts.indexOf(filteredContacts[index]);
     if (actualIndex != -1) {
@@ -218,7 +218,7 @@ class _HomepageState extends State<Homepage> {
       _company.clear();
       _url.clear();
     }
-
+// cris
     showCupertinoModalPopup(
       context: context,
       builder: (context) {
@@ -272,7 +272,8 @@ class _HomepageState extends State<Homepage> {
                     // Add a flag to indicate if it's a base64 image or URL
                     "isBase64": _selectedImageBase64 != null,
                   };
-setState(() {
+// charles
+                  setState(() {
                     if (contactToEdit != null && editIndex != null) {
                       // Update existing contact
                       contacts[editIndex] = contactData;
@@ -358,8 +359,8 @@ setState(() {
                           ],
                         ),
                       ),
-
-   SizedBox(height: 20),
+// marc
+                      SizedBox(height: 20),
 
                       // Phone Fields
                       Container(
@@ -449,7 +450,8 @@ setState(() {
                                             ),
                                           );
                                         },
-     child: Container(
+// jenzelle
+                                        child: Container(
                                           width: 80,
                                           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                                           child: Text(
@@ -526,7 +528,9 @@ setState(() {
                           ],
                         ),
                       ),
- Container(
+
+                      // kevin
+                      Container(
                         decoration: BoxDecoration(
                           color: CupertinoColors.systemGrey.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(8),
@@ -568,7 +572,8 @@ setState(() {
                                         ),
                                       ),
 
-                                           GestureDetector(
+                                      // charles
+                                      GestureDetector(
                                         onTap: () {
                                           // Show a modal for label selection
                                           showCupertinoModalPopup(
@@ -612,8 +617,8 @@ setState(() {
                                             ),
                                           );
                                         },
-
-     child: Container(
+// cris
+                                        child: Container(
                                           width: 80,
                                           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                                           child: Text(
@@ -651,7 +656,7 @@ setState(() {
                               );
                             }).toList(),
 
-
+                            // kevin
                             GestureDetector(
                               onTap: () {
                                 setModalState(() {
@@ -740,9 +745,8 @@ setState(() {
       },
     );
   }
-
-
-   @override
+// eric
+  @override
   void dispose() {
     _fname.dispose();
     _lname.dispose();
@@ -860,6 +864,7 @@ setState(() {
                   )
                 ],
               ),
+// marc
               SizedBox(height: 20),
               Divider(
                 color: CupertinoColors.systemGrey.withOpacity(0.3),
