@@ -449,6 +449,84 @@ setState(() {
                                             ),
                                           );
                                         },
+     child: Container(
+                                          width: 80,
+                                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                                          child: Text(
+                                            field.label,
+                                            style: TextStyle(
+                                              color: CupertinoColors.activeBlue,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+
+                                      // Phone input field
+                                      Expanded(
+                                        child: CupertinoTextField(
+                                          controller: field.controller,
+                                          placeholder: 'Phone',
+                                          keyboardType: TextInputType.phone,
+                                          decoration: BoxDecoration(
+                                            color: Colors.transparent,
+                                          ),
+                                          padding: EdgeInsets.symmetric(vertical: 12),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  // Add divider except for the last item
+                                  if (index < _phoneFields.length - 1)
+                                    Divider(
+                                      color: CupertinoColors.systemGrey.withOpacity(0.3),
+                                      height: 1,
+                                      indent: 46, // Indent to align with the text fields
+                                    ),
+                                ],
+                              );
+                            }).toList(),
+
+                            // Add phone button
+                            GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  _phoneFields.add(PhoneField());
+                                });
+                              },
+                              child: Row(
+                                children: [
+                                  Container(
+                                    margin: EdgeInsets.only(left: 12),
+                                    width: 26,
+                                    height: 26,
+                                    decoration: BoxDecoration(
+                                      color: CupertinoColors.activeGreen,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      CupertinoIcons.plus,
+                                      color: CupertinoColors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    child: Text(
+                                      'add phone',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
