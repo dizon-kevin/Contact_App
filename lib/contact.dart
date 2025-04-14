@@ -185,77 +185,62 @@ class _ContactState extends State<Contact> {
     });
   }
 
-class _ContactState extends State<Contact> {
-  @override
+ @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-
-        child: SafeArea(child:Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-        Stack(
-          alignment: Alignment.bottomCenter,
-          children: [
-
-            Image.network(photo, width: double.infinity, fit: BoxFit.fill, height: 300,),
-            Positioned(
-                  top: -2,
-                left: -15,
-                child: Row(
-              children: [
-                CupertinoButton(child: Icon(CupertinoIcons.chevron_back, color: CupertinoColors.white,), onPressed: (){
-                  Navigator.pop(context);
-                })
-              ],
-
-            )),
-            Positioned(
-              child: Column(
+        child: SafeArea(child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                alignment: Alignment.bottomCenter,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-              
-                      Text("last used: ", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w200),),
-                      Container(
-                          padding: EdgeInsets.fromLTRB(5,0,5,0),
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(5),
-                              color: CupertinoColors.white
-                          ),
-                          child: Text("P", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: CupertinoColors.black),)),
-                      Text("Primary", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w200),),
-              
-                      Icon(CupertinoIcons.chevron_forward, size: 12, color: CupertinoColors.white,)
-                    ],
+                  // Display image with the ability to update
+                  _getImageWidget(),
+                  Positioned(
+                      top: -2,
+                      left: -15,
+                      child: Row(
+                        children: [
+                          CupertinoButton(
+                              child: Icon(CupertinoIcons.chevron_back, color: CupertinoColors.white),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              }
+                          )
+                        ],
+                      )
                   ),
-                  Text(name, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500),),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          child: Container(
-                            margin: EdgeInsets.fromLTRB(5,0,5,0),
-                            padding: EdgeInsets.fromLTRB(10,0,10,5),
-                            decoration: BoxDecoration(
-                                color: CupertinoColors.systemGrey.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(10)
-                            ),
-                            child: Column(
-                              children: [
-                                CupertinoButton(child: Icon(CupertinoIcons.bubble_middle_bottom_fill, color: CupertinoColors.white,), onPressed: () async{
-                                    final Uri uri = await Uri.parse('sms: $phone');
-                                    await launchUrl(uri);
-                                }),
-                                Text('Message', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w300),)
-              
-                              ],
-                            ),
-                          ),
+                  Positioned(
+                      top: 10,
+                      right: 10,
+                      child: CupertinoButton(
+                        padding: EdgeInsets.all(10),
+                        child: Icon(
+                          _isEditing ? CupertinoIcons.check_mark : CupertinoIcons.pencil,
+                          color: CupertinoColors.white,
                         ),
+                        onPressed: _toggleEditMode,
+                      )
+                  ),
+                  // Add Change Photo button if in editing mode
+                  if (_isEditing)
+                    Positioned(
+                        top: 60,
+                        right: 10,
+                        child: CupertinoButton(
+                          padding: EdgeInsets.all(10),
+                          color: CupertinoColors.systemGrey.withOpacity(0.5),
+                          child: Row(
+                            children: [
+                              Icon(CupertinoIcons.camera, color: CupertinoColors.white, size: 16),
+                              SizedBox(width: 5),
+                              Text("Change Photo", style: TextStyle(fontSize: 14)),
+                            ],
+                          ),
+                          onPressed: _pickImage,
+                        )
+                    ),
                         Container(
                           child: Container(
                             margin: EdgeInsets.fromLTRB(5,0,5,0),
