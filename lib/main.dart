@@ -568,6 +568,50 @@ setState(() {
                                         ),
                                       ),
 
+                                           GestureDetector(
+                                        onTap: () {
+                                          // Show a modal for label selection
+                                          showCupertinoModalPopup(
+                                            context: context,
+                                            builder: (context) => Container(
+                                              height: 250,
+                                              color: CupertinoColors.black,
+                                              child: Column(
+                                                children: [
+                                                  Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    children: [
+                                                      CupertinoButton(
+                                                        child: Text('Cancel'),
+                                                        onPressed: () => Navigator.pop(context),
+                                                      ),
+                                                      CupertinoButton(
+                                                        child: Text('Done'),
+                                                        onPressed: () => Navigator.pop(context),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Expanded(
+                                                    child: CupertinoPicker(
+                                                      itemExtent: 32,
+                                                      onSelectedItemChanged: (int value) {
+                                                        setModalState(() {
+                                                          field.label = _emailLabels[value];
+                                                        });
+                                                      },
+                                                      children: _emailLabels.map((label) =>
+                                                          Text(label)
+                                                      ).toList(),
+                                                      scrollController: FixedExtentScrollController(
+                                                        initialItem: _emailLabels.indexOf(field.label),
+                                                      ),
+                                                    ),
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
 
   @override
   Widget build(BuildContext context) {
